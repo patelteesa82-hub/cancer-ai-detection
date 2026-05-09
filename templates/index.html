@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancer AI Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input[type="number"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .biomarker-group {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .biomarker-group h3 {
+            color: #667eea;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-predict {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-predict:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-reset {
+            background: #ddd;
+            color: #333;
+        }
+        
+        .btn-reset:hover {
+            background: #ccc;
+        }
+        
+        .result {
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .risk-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        .risk-high {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .risk-moderate {
+            background: #ffd93d;
+            color: #333;
+        }
+        
+        .risk-uncertain {
+            background: #ff9f1c;
+            color: white;
+        }
+        
+        .risk-low {
+            background: #06d6a0;
+            color: white;
+        }
+        
+        .result-section {
+            margin-bottom: 25px;
+        }
+        
+        .result-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .organ-probability {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .organ-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .organ-bar {
+            flex: 1;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+        
+        .organ-bar.lung {
+            background: linear-gradient(90deg, #667eea 0%, #667eea var(--percentage), #ddd var(--percentage), #ddd 100%);
+        }
+        
+        .organ-bar.colon {
+            background: linear-gradient(90deg, #764ba2 0%, #764ba2 var(--percentage), #ddd var(--percentage), #ddd 100%);
+        }
+        
+        .organ-percentage {
+            min-width: 60px;
+            text-align: right;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .recommendation {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.05em;
+            color: #2e7d32;
+        }
+        
+        .follow-up {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            color: #e65100;
+        }
+        
+        .disclaimer {
+            background: #f3e5f5;
+            border: 1px solid #ce93d8;
+            padding: 15px;
+            border-radius: 8px;
+            color: #6a1b9a;
+            font-size: 0.95em;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Cancer AI Detection System</h1>
+            <p>Blood-based Biomarker Analysis with AI Risk Prediction</p>
+        </div>
+        
+        <div class="main">
+            <!-- Input Form -->
+            <div class="card">
+                <h2>Patient Data Input</h2>
+                <form id="inputForm">
+                    <!-- Biomarkers Section -->
+                    <div class="biomarker-group">
+                        <h3>Blood Biomarkers</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="ctDNA" name="ctDNA_positive">
+                                <label for="ctDNA">ctDNA Positive</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="EGFR" name="EGFR_mutation">
+                                <label for="EGFR">EGFR Mutation</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="KRAS" name="KRAS_mutation">
+                                <label for="KRAS">KRAS Mutation</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="APC" name="APC_mutation">
+                                <label for="APC">APC Mutation</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="p53" name="p53_mutation">
+                                <label for="p53">p53 Mutation</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Protein Levels -->
+                    <div class="biomarker-group">
+                        <h3>Protein Levels (ng/mL)</h3>
+                        <div class="form-group">
+                            <label for="CEA">CEA Level (normal <3)</label>
+                            <input type="number" id="CEA" name="CEA_level" min="0" max="20" step="0.1" value="2.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="CYFRA">CYFRA 21-1 (normal <3)</label>
+                            <input type="number" id="CYFRA" name="CYFRA_level" min="0" max="20" step="0.1" value="2.5">
+                        </div>
+                    </div>
+                    
+                    <!-- Clinical Data -->
+                    <div class="biomarker-group">
+                        <h3>Clinical Information</h3>
+                        <div class="form-group">
+                            <label for="age">Age (years)</label>
+                            <input type="number" id="age" name="age" min="18" max="120" value="55">
+                        </div>
+                        <div class="form-group">
+                            <label for="smoking">Smoking Status</label>
+                            <select id="smoking" name="smoking_status">
+                                <option value="0">Never smoked</option>
+                                <option value="1">Current/Former smoker</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="family" name="family_history">
+                            <label for="family">Family History of Cancer</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="respiratory" name="respiratory_symptoms">
+                            <label for="respiratory">Respiratory Symptoms</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="GI" name="GI_symptoms">
+                            <label for="GI">GI Symptoms</label>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" class="btn-predict" onclick="predictRisk()">🔍 PREDICT RISK</button>
+                        <button type="reset" class="btn-reset">↺ RESET FORM</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="card result" id="resultSection">
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing biomarkers...</p>
+                </div>
+                
+                <div id="resultContent" style="display: none;">
+                    <h2>AI Analysis Result</h2>
+                    
+                    <div id="riskBadge"></div>
+                    
+                    <div class="result-section">
+                        <h3>Cancer Activity</h3>
+                        <p id="cancerActivity" style="font-size: 1.1em;"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>Organ Probabilities</h3>
+                        <div id="organProbabilities"></div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>Primary Concern</h3>
+                        <p id="primaryOrgan" style="font-size: 1.2em; font-weight: 600; color: #667eea;"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>🏥 Clinical Recommendation</h3>
+                        <div class="recommendation" id="recommendation"></div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>⏰ Follow-up Timeline</h3>
+                        <div class="follow-up" id="followUp"></div>
+                    </div>
+                    
+                    <div class="disclaimer">
+                        <strong>⚠️ IMPORTANT DISCLAIMER:</strong><br>
+                        This AI analysis is for research and decision support only. It is NOT a medical diagnosis. 
+                        All results must be reviewed by qualified medical professionals before any clinical decisions are made.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function predictRisk() {
+            const form = document.getElementById('inputForm');
+            const resultSection = document.getElementById('resultSection');
+            const loading = document.getElementById('loading');
+            const resultContent = document.getElementById('resultContent');
+            
+            // Show result section and loading
+            resultSection.classList.add('show');
+            loading.style.display = 'block';
+            resultContent.style.display = 'none';
+            
+            // Collect form data
+            const biomarkers = {
+                'ctDNA_positive': form.ctDNA_positive.checked ? 1 : 0,
+                'EGFR_mutation': form.EGFR_mutation.checked ? 1 : 0,
+                'KRAS_mutation': form.KRAS_mutation.checked ? 1 : 0,
+                'APC_mutation': form.APC_mutation.checked ? 1 : 0,
+                'p53_mutation': form.p53_mutation.checked ? 1 : 0,
+                'CEA_level': parseFloat(form.CEA_level.value),
+                'CYFRA_level': parseFloat(form.CYFRA_level.value)
+            };
+            
+            const clinical_data = {
+                'age': parseInt(form.age.value),
+                'smoking_status': parseInt(form.smoking_status.value),
+                'family_history': form.family_history.checked ? 1 : 0,
+                'respiratory_symptoms': form.respiratory_symptoms.checked ? 1 : 0,
+                'GI_symptoms': form.GI_symptoms.checked ? 1 : 0
+            };
+            
+            // Send to API
+            fetch('/api/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    biomarkers: biomarkers,
+                    clinical_data: clinical_data
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayResults(data);
+                loading.style.display = 'none';
+                resultContent.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loading.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            });
+        }
+        
+        function displayResults(data) {
+            // Risk Badge
+            const riskBadge = document.getElementById('riskBadge');
+            const riskClass = 'risk-' + data.risk_category.toLowerCase().split(' ')[0];
+            riskBadge.innerHTML = `<div class="risk-badge ${riskClass}">${data.risk_category}</div>`;
+            
+            // Cancer Activity
+            const cancerActivity = document.getElementById('cancerActivity');
+            if (data.cancer_activity_high) {
+                cancerActivity.innerHTML = `<span style="color: #d32f2f; font-weight: 600;">⚠️ HIGH cancer activity detected in blood</span>`;
+            } else {
+                cancerActivity.innerHTML = `<span style="color: #388e3c; font-weight: 600;">✓ No significant cancer activity detected</span>`;
+            }
+            
+            // Organ Probabilities
+            const organProbs = document.getElementById('organProbabilities');
+            const organs = data.organ_probabilities;
+            
+            let orgHTML = '';
+            
+            // Lung
+            const lungPercent = organs.lung;
+            orgHTML += `
+                <div class="organ-probability">
+                    <div class="organ-name">🫁 Lung Cancer</div>
+                    <div class="organ-bar lung" style="--percentage: ${lungPercent}%"></div>
+                    <div class="organ-percentage">${lungPercent}%</div>
+                </div>
+            `;
+            
+            // Colon
+            const colonPercent = organs.colorectal;
+            orgHTML += `
+                <div class="organ-probability">
+                    <div class="organ-name">🔴 Colorectal Cancer</div>
+                    <div class="organ-bar colon" style="--percentage: ${colonPercent}%"></div>
+                    <div class="organ-percentage">${colonPercent}%</div>
+                </div>
+            `;
+            
+            // Other
+            const otherPercent = organs.other;
+            orgHTML += `
+                <div class="organ-probability">
+                    <div class="organ-name">❓ Other/Uncertain</div>
+                    <div class="organ-bar" style="background: linear-gradient(90deg, #9c27b0 0%, #9c27b0 ${otherPercent}%, #ddd ${otherPercent}%, #ddd 100%);"></div>
+                    <div class="organ-percentage">${otherPercent}%</div>
+                </div>
+            `;
+            
+            organProbs.innerHTML = orgHTML;
+            
+            // Primary Organ
+            const primaryOrgan = document.getElementById('primaryOrgan');
+            primaryOrgan.innerHTML = `Primary Concern: ${data.primary_organ}`;
+            
+            // Recommendation
+            document.getElementById('recommendation').innerHTML = data.recommendation;
+            
+            // Follow-up
+            document.getElementById('followUp').innerHTML = `<strong>Follow-up Schedule:</strong> ${data.follow_up}`;
+        }
+        
+        // Allow Enter key to predict
+        document.getElementById('inputForm').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                predictRisk();
+            }
+        });
+    </script>
+</body>
+</html>
