@@ -71,21 +71,69 @@ df.loc[family_mask, 'KRAS'] *= np.random.uniform(1.2, 1.6, family_mask.sum())
 biomarker_cols = ['ctDNA', 'EGFR', 'KRAS', 'APC', 'CEA', 'CYFRA_21_1']
 df[biomarker_cols] = df[biomarker_cols].round(2)
 
-# Save to CSV
-output_file = 'cancer_biomarkers_50k.csv'
-df.to_csv(output_file, index=False)
+# Save to Excel with formatting
+output_file = 'cancer_biomarkers_50k.xlsx'
 
-print(f"Dataset created successfully!")
-print(f"Total samples: {len(df):,}")
-print(f"Output file: {output_file}")
-print(f"\nDataset shape: {df.shape}")
-print(f"\nFirst few rows:")
+# Create Excel writer
+with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+    df.to_excel(writer, sheet_name='Dataset', index=False)
+    
+    # Get workbook and worksheet
+    workbook = writer.book
+    worksheet = writer.sheets['Dataset']
+    
+    # Import openpyxl styles
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    
+    # Define header style
+    header_fill = PatternFill(start_color='1F4E78', end_color='1F4E78', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Apply header formatting
+    for cell in worksheet[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = border
+    
+    # Apply border to all data cells and center alignment for numbers
+    for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
+        for cell in row:
+            cell.border = border
+            if cell.column > 1:  # For numeric columns (skip Sample_ID)
+                cell.alignment = Alignment(horizontal='right')
+    
+    # Auto-adjust column widths
+    for column in worksheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        worksheet.column_dimensions[column_letter].width = adjusted_width
+    
+    # Freeze header row
+    worksheet.freeze_panes = 'A2'
+
+print(f"✅ Dataset created successfully!")
+print(f"📊 Total samples: {len(df):,}")
+print(f"📁 Output file: {output_file}")
+print(f"\n📈 Dataset shape: {df.shape}")
+print(f"\n📋 First few rows:")
 print(df.head(10))
-print(f"\nData types:")
-print(df.dtypes)
-print(f"\nBasic statistics:")
+print(f"\n📊 Biomarker Statistics:")
 print(df[biomarker_cols].describe())
-print(f"\nCancer Type distribution:")
+print(f"\n🏥 Cancer Type distribution:")
 print(df['Cancer_Type'].value_counts())
-print(f"\nStatus distribution:")
+print(f"\n⚠️ Status distribution:")
 print(df['Status'].value_counts())
