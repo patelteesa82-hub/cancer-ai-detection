@@ -101,17 +101,18 @@ for marker in ['ctDNA', 'EGFR', 'KRAS', 'APC', 'CEA', 'CYFRA_21_1']:
     print(f"  Min:  {df[marker].min():.3f}")
     print(f"  Max:  {df[marker].max():.3f}")
 
-# Save to CSV
-output_file = 'cancer_biomarkers_50k.csv'
-df.to_csv(output_file, index=False)
+# Save to Excel (primary output)
+output_file_excel = 'cancer_biomarkers_50k.xlsx'
+df.to_excel(output_file_excel, index=False, sheet_name='Biomarkers')
 print(f"\n{'='*80}")
-print(f"✓ Dataset saved to: {output_file}")
+print(f"✓ Dataset saved to: {output_file_excel}")
 print(f"✓ Total records: {len(df):,}")
 print(f"{'='*80}\n")
 
-# Save to Excel (optional)
+# Also save to CSV as backup
 try:
-    df.to_excel('cancer_biomarkers_50k.xlsx', index=False, sheet_name='Biomarkers')
-    print("✓ Excel file also created: cancer_biomarkers_50k.xlsx\n")
+    output_file_csv = 'cancer_biomarkers_50k.csv'
+    df.to_csv(output_file_csv, index=False)
+    print(f"✓ CSV backup also created: {output_file_csv}\n")
 except:
-    print("⚠ Excel export requires openpyxl library\n")
+    print("⚠ CSV export failed\n")
