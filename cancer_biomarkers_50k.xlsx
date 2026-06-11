@@ -1,0 +1,95 @@
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import io
+import base64
+
+# Set random seed
+np.random.seed(42)
+
+# Generate 50,000 samples
+n_samples = 50000
+
+data = {
+    'Sample_ID': [f'CANCER_{i:06d}' for i in range(1, n_samples + 1)],
+    'ctDNA': np.random.exponential(scale=50, size=n_samples),
+    'EGFR': np.random.gamma(shape=2, scale=20, size=n_samples),
+    'KRAS': np.random.gamma(shape=1.5, scale=15, size=n_samples),
+    'APC': np.random.gamma(shape=2, scale=25, size=n_samples),
+    'CEA': np.random.exponential(scale=3, size=n_samples),
+    'CYFRA_21_1': np.random.exponential(scale=2, size=n_samples),
+    'Age': np.random.normal(loc=62, scale=12, size=n_samples).astype(int),
+    'Sex': np.random.choice(['Male', 'Female'], size=n_samples, p=[0.55, 0.45]),
+    'Family_History': np.random.choice(['Yes', 'No'], size=n_samples, p=[0.25, 0.75]),
+    'Smoking_History': np.random.choice(['Never', 'Former', 'Current'], size=n_samples, p=[0.35, 0.40, 0.25]),
+    'Cancer_Type': np.random.choice(['Lung', 'Colorectal', 'Breast', 'Gastric', 'Pancreatic'], 
+                                     size=n_samples, p=[0.35, 0.25, 0.20, 0.12, 0.08]),
+    'Stage': np.random.choice(['I', 'II', 'III', 'IV'], size=n_samples, p=[0.15, 0.25, 0.35, 0.25]),
+    'Status': np.random.choice(['Healthy', 'Early_Detection', 'Advanced'], 
+                                size=n_samples, p=[0.20, 0.35, 0.45]),
+    'Collection_Date': [datetime(2023, 1, 1) + timedelta(days=int(x)) 
+                        for x in np.random.uniform(0, 730, n_samples)],
+}
+
+df = pd.DataFrame(data)
+df['Age'] = df['Age'].clip(18, 95)
+
+# Add correlations
+advanced_mask = df['Status'] == 'Advanced'
+df.loc[advanced_mask, 'ctDNA'] *= np.random.uniform(2, 5, advanced_mask.sum())
+df.loc[advanced_mask, 'CEA'] *= np.random.uniform(1.5, 4, advanced_mask.sum())
+df.loc[advanced_mask, 'CYFRA_21_1'] *= np.random.uniform(1.5, 4, advanced_mask.sum())
+
+smoker_mask = df['Smoking_History'] != 'Never'
+df.loc[smoker_mask, 'ctDNA'] *= np.random.uniform(1.2, 1.8, smoker_mask.sum())
+
+family_mask = df['Family_History'] == 'Yes'
+df.loc[family_mask, 'KRAS'] *= np.random.uniform(1.2, 1.6, family_mask.sum())
+
+biomarker_cols = ['ctDNA', 'EGFR', 'KRAS', 'APC', 'CEA', 'CYFRA_21_1']
+df[biomarker_cols] = df[biomarker_cols].round(2)
+
+# Save to Excel
+output_file = 'cancer_biomarkers_50k.xlsx'
+with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+    df.to_excel(writer, sheet_name='Cancer_Data', index=False)
+    
+    workbook = writer.book
+    worksheet = writer.sheets['Cancer_Data']
+    
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    
+    header_fill = PatternFill(start_color='1F4E78', end_color='1F4E78', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                   top=Side(style='thin'), bottom=Side(style='thin'))
+    
+    for cell in worksheet[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = border
+    
+    for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
+        for cell in row:
+            cell.border = border
+            if cell.column > 1:
+                cell.alignment = Alignment(horizontal='right')
+    
+    for column in worksheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        worksheet.column_dimensions[column_letter].width = adjusted_width
+    
+    worksheet.freeze_panes = 'A2'
+
+print(f"✅ EXCEL FILE READY: cancer_biomarkers_50k.xlsx")
+print(f"📊 50,000 samples with all biomarkers")
+print(f"💾 File saved in current directory")
