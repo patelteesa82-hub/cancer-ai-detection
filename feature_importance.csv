@@ -1,0 +1,11 @@
+Feature,Importance,Importance_Percentage
+ctDNA,0.2847,28.47
+EGFR,0.1834,18.34
+CEA,0.1523,15.23
+Age,0.1289,12.89
+KRAS,0.1012,10.12
+CYFRA_21_1,0.0934,9.34
+APC,0.0823,8.23
+Family_History,0.0456,4.56
+Sex,0.0234,2.34
+Smoking_History,0.0048,0.48

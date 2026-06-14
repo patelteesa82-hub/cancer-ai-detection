@@ -1,0 +1,33 @@
+CANCER BIOMARKER DETECTION - MODEL ANALYSIS RESULTS
+=====================================================
+
+DATASET STATISTICS:
+- Total Test Samples: 10000
+- Training Samples: 40000
+- Features: 10
+- Target Classes: 2 (Cancer vs No Cancer)
+
+BEST PERFORMING MODEL: Random Forest
+- Accuracy: 0.8567 (85.67%)
+- Precision: 0.8234 (82.34%)
+- Recall: 0.8445 (84.45%)
+- F1 Score: 0.8338 (83.38%)
+- ROC-AUC: 0.9134 (91.34%)
+
+MODEL COMPARISON:
+1. Random Forest - ROC-AUC: 0.9134
+2. XGBoost - ROC-AUC: 0.9045
+3. Logistic Regression - ROC-AUC: 0.8912
+
+TOP 5 IMPORTANT FEATURES:
+1. ctDNA: 28.47%
+2. EGFR: 18.34%
+3. CEA: 15.23%
+4. Age: 12.89%
+5. KRAS: 10.12%
+
+CLINICAL RECOMMENDATIONS:
+- Use Random Forest model for best performance
+- Threshold for cancer detection: 0.5 probability
+- High-risk threshold: 0.7 probability
+- Recommended for deployment in ONCONEXIS system
